@@ -5,7 +5,7 @@ const provider = new ethers.getDefaultProvider('http://127.0.0.1:8545/')
 const testAddress = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
 
 //my contract
-const my_contract = '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1'
+const my_contract = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'
 
 
 //related to borrowing usdc
@@ -44,19 +44,23 @@ async function lfg() {
 
     const myContract = await initMyContract()
     const usdbcContract = await initUsdbcContract()
-    console.log(await usdbcContract.transfer(my_contract, 1000))
+   // console.log(await usdbcContract.transfer(my_contract, 80000000000))
 
     const gasLimitA = ethers.parseEther('0.05'); // 0.1 Ether
-    const ethPayload = ethers.parseEther('0.1'); // 0.1 Ether
+    const usdcmAmt = ethers.parseEther('91006300000')
+    console.log(usdcmAmt)
+    const ethPayload = ethers.parseEther('0.001'); // 0.1 Ether
+    console.log(ethPayload)
     
 
     //console.log(await myContract.getOwner())
-    const gasPriceInWei = ethers.parseUnits('50', 'gwei'); // Gas price in Wei (50 Gwei)
-    const gasLimit = 30000000; // Gas limit
+    console.log('**********************************')
+    const gasPriceInWei = ethers.parseUnits('0.001722545', 'gwei'); // Gas price in Wei (50 Gwei)
+    const gasLimit = 2000000; // Gas limit
     
     console.log(
         await myContract.supplyBorrowStake(
-            333, USDbC, aavePool, ethPayload, aaveEthPool,
+            usdcmAmt, USDbC, aavePool, ethPayload,
             { gasPrice: gasPriceInWei, gasLimit: gasLimit }
         )
     )

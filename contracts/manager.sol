@@ -13,7 +13,6 @@ interface USDbC {
         uint256 amount
      ) external returns (bool);
 
-
 }
 
 // Define an interface for interacting with aave shitcoin pool.
@@ -33,7 +32,6 @@ interface AavePool {
         uint256 amount,
         address to
     ) external;
-
    
 }
 
@@ -41,18 +39,20 @@ interface AavePool {
 interface AaveEPool{
 
     // Borrow ETH from the pool.
-    function borrowETH(address ,
-    uint256 amount,
-    uint256 interestRateMode,
-    uint16 referralCode
+    function borrowETH(
+        address pool,
+        uint256 amount,
+        uint256 interestRateMode,
+        uint16 referralCode
     ) external;
 
     // Repay borrowed ETH to the pool.
-    function repayETH(address ,
-    uint256 amount,
-    uint256 interestRateMode,
-    address onBehalfOf
-    ) external;
+    function repayETH(
+        address pool,
+        uint256 amount,
+        uint256 rateMode,
+        address onBehalfOf
+  ) external payable;
     
 }
 //Define an interface for interacting with aerodrome pool
@@ -107,12 +107,11 @@ contract manager {
         uint256 usdbcAmount, 
         address usdbcContract,
         address aavePoolContract,
-        uint256 ethAmount, 
-        address ethPool) external onlyOwner{
+        uint256 ethAmount) external onlyOwner{
             
       usdbc.approve(aavePoolContract, usdbcAmount); 
       aavePool.supply(usdbcContract,usdbcAmount,address(this),0);
-      aaveEthPool.borrowETH(ethPool,ethAmount,2,0);
+      aaveEthPool.borrowETH(aavePoolContract,ethAmount,2,0);
 
     }
 

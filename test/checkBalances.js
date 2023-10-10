@@ -10,7 +10,7 @@ const aaveBaseWethAddress = '0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7'; // Rep
 const myContractAddress= '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'
 const usdbcABI = require('./ABIs/usdbcABI.json'); // ERC-20 balanceOf function ABI for token 1
 
-const address = '0x610178da211fef7d417bc0e6fed39f05609ad788'; // Replace with the address you want to query
+const address = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'; // Replace with the address you want to query
 
 // Function to get ETH balance
 async function getEthBalance() {
@@ -27,7 +27,7 @@ const tokenBalance = await tokenContract.balanceOf(address);
 
     
 //  console.log(`Token Balance for ${address}: ${tokenBalance.toString()} tokens ${ethers.formatEther(tokenBalance)}`);
- console.log(`Token Balance for ${address}: ${tokenBalance.toString()} tokens `);
+ console.log(`Token Balance for ${address}: ${tokenBalance} tokens `);
 }
 
 // Replace with the ERC-20 token contract address and ABI

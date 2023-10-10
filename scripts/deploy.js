@@ -1,33 +1,47 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat");
+const { ethers } = require('ethers');
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  // Replace with your private key and RPC endpoint
+  const privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+  const rpcEndpoint = 'http://127.0.0.1:8545'
 
-  const lockedAmount = hre.ethers.parseEther("0.001");
+  // Create a provider using your RPC endpoint
+  const provider = new ethers.JsonRpcProvider(rpcEndpoint)
 
-  const lock = await hre.ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
+  // Connect a wallet using the private key
+  const wallet = new ethers.Wallet(privateKey, provider)
 
-  await lock.waitForDeployment();
+  // Replace with the actual address of the IPool contract
+  const usdbc_Contract = '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA'
+  const aavePool_Contract = '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5'
+  const aaveETH_Contract = '0x18CD499E3d7ed42FEbA981ac9236A278E4Cdc2ee'
+  const aeroDrome_Contract = '0x0000000000000000000000000000000000000000'
+  const aerodromeEthUsdbc_Contract = ''
 
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+
+  // Provide the ABI for your contract
+  const contractAbi = require('../artifacts/contracts/manager.sol/manager.json')
+
+  // Create a ContractFactory with ABI and signer
+  const managerFactory = new ethers.ContractFactory(contractAbi.abi, contractAbi.bytecode, wallet)
+
+  // Deploy the contract
+//   constructor(address usdbcAddress,
+//     address aavePoolAddress,
+//     address aaveEthPoolAddress,
+//     address aerodromePoolAddress
+//     )
+  const manager = await managerFactory.deploy(usdbc_Contract,
+    aavePool_Contract,aaveETH_Contract,aeroDrome_Contract
+    )
+
+//  await manager.deployed();
+  console.log(manager)
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

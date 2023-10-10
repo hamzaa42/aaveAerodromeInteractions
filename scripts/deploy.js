@@ -31,8 +31,11 @@ async function main() {
 //     address aaveEthPoolAddress,
 //     address aerodromePoolAddress
 //     )
-  const manager = await managerFactory.deploy(usdbc_Contract,
-    aavePool_Contract,aaveETH_Contract,aeroDrome_Contract
+  const manager = await managerFactory.deploy(
+    usdbc_Contract,
+    aavePool_Contract,
+    aaveETH_Contract,
+    aeroDrome_Contract
     )
 
 //  await manager.deployed();

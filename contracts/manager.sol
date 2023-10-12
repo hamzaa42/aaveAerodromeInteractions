@@ -32,11 +32,15 @@ interface AavePool {
         uint256 amount,
         address to
     ) external;
+
+    // function setUserUseReserveAsCollateral(
+    //     address asset, 
+    //     bool useAsCollateral) external;
    
 }
 
 // Define an interface for interacting with aave eth pool.
-interface AaveEPool{
+interface AaveWethGateway{
 
     // Borrow ETH from the pool.
     function borrowETH(
@@ -55,6 +59,16 @@ interface AaveEPool{
   ) external payable;
     
 }
+
+interface VariableDebtToken{
+    
+    function approveDelegation(
+        address delegatee,
+        uint256 amount
+        ) external;
+
+}
+
 //Define an interface for interacting with aerodrome pool
 interface AeroPool{
     function idkName_supply() external returns (bool);
@@ -67,20 +81,23 @@ contract manager {
     //creating contract's API
     USDbC public usdbc;
     AavePool public aavePool;
-    AaveEPool public aaveEthPool;
+    AaveWethGateway public aaveWethGateway;
+    VariableDebtToken public debtToken;
     AeroPool public aeroPool;
     address public owner;
 
     constructor(address usdbcAddress,
         address aavePoolAddress,
-        address aaveEthPoolAddress,
+        address aaveWethGatewayAddress,
+        address variableDebtToken,
         address aerodromePoolAddress
         )
     
         {
             usdbc = USDbC(usdbcAddress);
             aavePool = AavePool(aavePoolAddress);
-            aaveEthPool = AaveEPool(aaveEthPoolAddress);
+            aaveWethGateway = AaveWethGateway(aaveWethGatewayAddress);
+            debtToken = VariableDebtToken(variableDebtToken);
             aeroPool = AeroPool(aerodromePoolAddress);
             owner = msg.sender;
     
@@ -95,26 +112,27 @@ contract manager {
     function getOwner() external view returns (address) {
         return owner;
     }
-    // //Function to approve usdbc spend onlyOwner
-    // function approveUSDbC(address contractAddress, uint256 amount)external onlyOwner{
-    //     usdbc.approve(contractAddress,amount);
-    // }
-    //Function to perform supply borrow and take operation
-    //supply usdbc on aave
-    //borrow eth against it
-    //add liquidity in aerodrome and stake it
+
+    receive() external payable {
+    
+    }
+   
     function supplyBorrowStake(
         uint256 usdbcAmount, 
-        address usdbcContract,
-        address aavePoolContract,
+        address usdbc_,
+        address aavePool_,
+        address aaveWethGateway_,
+        uint256 delegationAmt,
         uint256 ethAmount) external onlyOwner{
             
-      usdbc.approve(aavePoolContract, usdbcAmount); 
-      aavePool.supply(usdbcContract,usdbcAmount,address(this),0);
-      aaveEthPool.borrowETH(aavePoolContract,ethAmount,2,0);
+        debtToken.approveDelegation(aaveWethGateway_,delegationAmt);
+        usdbc.approve(aavePool_, usdbcAmount); 
+        aavePool.supply(usdbc_,usdbcAmount,address(this),0);
+        aaveWethGateway.borrowETH(aavePool_,ethAmount,2,0);
 
     }
 
+ 
     //Function to repay all borrowed assets and redeem all supplied assets
     function repayAndRedeem(uint256 usdbcAmount, int256 ethAmount) external payable onlyOwner{
         

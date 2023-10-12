@@ -15,6 +15,7 @@ async function main() {
   const usdbc_Contract = '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA'
   const aavePool_Contract = '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5'
   const aaveETH_Contract = '0x18CD499E3d7ed42FEbA981ac9236A278E4Cdc2ee'
+  const aaveVariableDebtToken_Contract = '0x24e6e0795b3c7c71D965fCc4f371803d1c1DcA1E'
   const aeroDrome_Contract = '0x0000000000000000000000000000000000000000'
   const aerodromeEthUsdbc_Contract = ''
 
@@ -35,6 +36,7 @@ async function main() {
     usdbc_Contract,
     aavePool_Contract,
     aaveETH_Contract,
+    aaveVariableDebtToken_Contract,
     aeroDrome_Contract
     )
 

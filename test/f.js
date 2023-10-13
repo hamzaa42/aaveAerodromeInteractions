@@ -51,18 +51,22 @@ async function lfg() {
     const usdbcContract = await initUsdbcContract()
     
     
+    //swapping eth for usdbc on uniswap
     
+
+    //initializing my contract with usdbc
+    //await usdbcContract.transfer(my_contract,(BigInt('10000')*BigInt(10**6)).toString())
     
+    //setting usdbc amount to borrow to my contract
     const usdbcAmount = (BigInt('1000')*BigInt(10**6)).toString()
-    
+    //ether payload for borrowing
     const ethPayload = ethers.parseEther('1')
    
     
 
-    //await usdbcContract.transfer(my_contract,(BigInt('10000')*BigInt(10**6)).toString())
     
     console.log(
-            await myContract.supplyBorrowStake(
+            await myContract.supplyBorrow(
                     usdbcAmount,
                     USDbC,
                     aavePool,

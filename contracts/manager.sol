@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-// Define an interface for approving the spending of usdbc.
-interface USDbC {
+// Define an relevant ERC20 functions.
+interface IERC20 {
     function approve(
         address spender,
         uint256 amount
@@ -13,10 +13,13 @@ interface USDbC {
         uint256 amount
      ) external returns (bool);
 
+     function balanceOf(
+        address account) external view returns (uint256);
+
 }
 
 // Define an interface for interacting with aave shitcoin pool.
-interface AavePool {
+interface IAavePool {
 
     // Supply funds to the pool.
     function supply(
@@ -40,7 +43,7 @@ interface AavePool {
 }
 
 // Define an interface for interacting with aave eth pool.
-interface AaveWethGateway{
+interface IAaveWethGateway{
 
     // Borrow ETH from the pool.
     function borrowETH(
@@ -60,7 +63,7 @@ interface AaveWethGateway{
     
 }
 
-interface VariableDebtToken{
+interface IVariableDebtToken{
     
     function approveDelegation(
         address delegatee,
@@ -70,35 +73,57 @@ interface VariableDebtToken{
 }
 
 //Define an interface for interacting with aerodrome pool
-interface AeroPool{
-    function idkName_supply() external returns (bool);
+interface IAeroPool{
+    function addLiquidityETH(
+        address token,
+        bool stable,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline) external payable;
 
-    function idkName_redeem() external returns (bool);
+    //function idkName_redeem() external;
+}
+
+interface IAeroStaker{
+ 
+    function deposit(uint256 amount) external returns (bool);
 }
 
 //Defining Smart contract
 contract manager {
     //creating contract's API
-    USDbC public usdbc;
-    AavePool public aavePool;
-    AaveWethGateway public aaveWethGateway;
-    VariableDebtToken public debtToken;
-    AeroPool public aeroPool;
+    IERC20 private _usdbc;
+    IERC20 private _weth;
+    IERC20 private _vammWethUsdbc;
+    IAavePool private _aavePool;
+    IAaveWethGateway private _aaveWethGateway;
+    IVariableDebtToken private _debtToken;
+    IAeroPool private _aeroPool;
+    IAeroStaker private _aeroStaker;
     address public owner;
 
-    constructor(address usdbcAddress,
+    constructor(
+        address usdbcAddress,
+        address wethAddress,
+        address vammWethUsdbcAddress,
         address aavePoolAddress,
         address aaveWethGatewayAddress,
-        address variableDebtToken,
-        address aerodromePoolAddress
+        address variableDebtTokenAddress,
+        address aerodromePoolAddress,
+        address aeroStakerAddress
         )
     
         {
-            usdbc = USDbC(usdbcAddress);
-            aavePool = AavePool(aavePoolAddress);
-            aaveWethGateway = AaveWethGateway(aaveWethGatewayAddress);
-            debtToken = VariableDebtToken(variableDebtToken);
-            aeroPool = AeroPool(aerodromePoolAddress);
+            _usdbc = IERC20(usdbcAddress);
+            _weth = IERC20(wethAddress);
+            _vammWethUsdbc = IERC20(vammWethUsdbcAddress);
+            _aavePool = IAavePool(aavePoolAddress);
+            _aaveWethGateway = IAaveWethGateway(aaveWethGatewayAddress);
+            _debtToken = IVariableDebtToken(variableDebtTokenAddress);
+            _aeroPool = IAeroPool(aerodromePoolAddress);
+            _aeroStaker = IAeroStaker(aeroStakerAddress);
             owner = msg.sender;
     
         }
@@ -117,26 +142,77 @@ contract manager {
     
     }
    
-    function supplyBorrowStake(
+    function supplyBorrow(
         uint256 usdbcAmount, 
         address usdbc_,
         address aavePool_,
         address aaveWethGateway_,
         uint256 delegationAmt,
         uint256 ethAmount) external onlyOwner{
-            
-        debtToken.approveDelegation(aaveWethGateway_,delegationAmt);
-        usdbc.approve(aavePool_, usdbcAmount); 
-        aavePool.supply(usdbc_,usdbcAmount,address(this),0);
-        aaveWethGateway.borrowETH(aavePool_,ethAmount,2,0);
+
+        //approving my debt tokens to be delegated    
+        _debtToken.approveDelegation(aaveWethGateway_,delegationAmt);
+        //approving usdbc to be used in the pool
+        _usdbc.approve(aavePool_, usdbcAmount); 
+        //supplying usdbc
+        _aavePool.supply(usdbc_,usdbcAmount,address(this),0);
+        //borrowing eth as collateral
+        _aaveWethGateway.borrowETH(aavePool_,ethAmount,2,0);
 
     }
 
  
     //Function to repay all borrowed assets and redeem all supplied assets
-    function repayAndRedeem(uint256 usdbcAmount, int256 ethAmount) external payable onlyOwner{
-        
+    function addLiquidityStake(
+        address aeroPool,
+        address lptoken,
+        address usdbc,
+        uint256 usdbcAmount,
+        uint256 ethAmount,
+        uint256 max) external onlyOwner returns(bool){
+    
+    // https://basescan.org/tx/0x282b3354944cc1632433f5bf63982985ffaa7f1708232747d124aed74bbfa957
+    
+    _usdbc.approve(aeroPool,usdbcAmount);
+    //todo remaining placeholders here
+    _aeroPool.addLiquidityETH(usdbc,false,3,4,ethAmount,address(this),7);
+    _vammWethUsdbc.approve(lptoken,max);
+    
+     //https://basescan.org/address/0xeca7ff920e7162334634c721133f3183b83b0323#code
+
+    uint256 vammBalance = _vammWethUsdbc.balanceOf(address(this)); 
+    _aeroStaker.deposit(vammBalance);
+    return true;
+           
     }
 
+    function getRewardsUnstakeRemoveLiquidity(uint256 usdbcAmount, int256 ethAmount) external onlyOwner{
+    //get reward
+    //unstake
+    //approve approve wethusdbc 
+    //remove liquidity
+    //now I have weth and usdbc -> todo convert weth to usdbc on uniswap
+    }
+
+    function repayDebtWithdrawCollateral() external onlyOwner{
+        //repay debt to aave
+        //withdraw collateral
+    }
+
+    function getRewards() external onlyOwner{
+        //get staking rewards in smart contract
+        //dump for usdbc
+        //send rewards to owner
+    }
+
+
+    function withdrawERC20(address tokenAddress, uint256 amount) external onlyOwner{
+        IERC20 token = IERC20(tokenAddress);
+        token.transfer (msg.sender, amount);
+    }
+
+    function allETH() external onlyOwner{
+    //return all eth to owner
+    }
 }
 

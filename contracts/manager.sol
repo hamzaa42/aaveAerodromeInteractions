@@ -72,8 +72,9 @@ interface IVariableDebtToken{
 
 }
 
-//Define an interface for interacting with aerodrome pool
-interface IAeroPool{
+// Define an interface for the Aero Router.
+interface IAeroRouter {
+
     function addLiquidityETH(
         address token,
         bool stable,
@@ -81,10 +82,27 @@ interface IAeroPool{
         uint256 amountTokenMin,
         uint256 amountETHMin,
         address to,
-        uint256 deadline) external payable;
+        uint256 deadline
+    ) external payable;
 
-    //function idkName_redeem() external;
+    function quoteRemoveLiquidity(
+        address tokenA,
+        address tokenB,
+        bool stable,
+        address _factory,
+        uint256 liquidity
+    ) external view returns (uint256 amountA, uint256 amountB);
+
+    function quoteAddLiquidity(
+        address tokenA,
+        address tokenB,
+        bool stable,
+        address _factory,
+        uint256 amountADesired,
+        uint256 amountBDesired
+    ) external view returns (uint256 amountA, uint256 amountB, uint256 liquidity);
 }
+
 
 interface IAeroStaker{
  
@@ -100,7 +118,7 @@ contract manager {
     IAavePool private _aavePool;
     IAaveWethGateway private _aaveWethGateway;
     IVariableDebtToken private _debtToken;
-    IAeroPool private _aeroPool;
+    IAeroRouter private _aeroRouter;
     IAeroStaker private _aeroStaker;
     address public owner;
 
@@ -111,8 +129,8 @@ contract manager {
         address aavePoolAddress,
         address aaveWethGatewayAddress,
         address variableDebtTokenAddress,
-        address aerodromePoolAddress,
-        address aeroStakerAddress
+        address aeroStakerAddress,
+        address aerodromeRouterAddress
         )
     
         {
@@ -122,7 +140,7 @@ contract manager {
             _aavePool = IAavePool(aavePoolAddress);
             _aaveWethGateway = IAaveWethGateway(aaveWethGatewayAddress);
             _debtToken = IVariableDebtToken(variableDebtTokenAddress);
-            _aeroPool = IAeroPool(aerodromePoolAddress);
+            _aeroRouter = IAeroRouter(aerodromeRouterAddress);
             _aeroStaker = IAeroStaker(aeroStakerAddress);
             owner = msg.sender;
     
@@ -164,18 +182,29 @@ contract manager {
  
     //Function to repay all borrowed assets and redeem all supplied assets
     function addLiquidityStake(
-        address aeroPool,
+        address aeroRouter,
+        address aeroFactory,
         address lptoken,
         address usdbc,
+        address weth,
         uint256 usdbcAmount,
         uint256 ethAmount,
-        uint256 max) external onlyOwner returns(bool){
+        uint256 max) external payable onlyOwner returns(bool){
     
     // https://basescan.org/tx/0x282b3354944cc1632433f5bf63982985ffaa7f1708232747d124aed74bbfa957
     
-    _usdbc.approve(aeroPool,usdbcAmount);
+     (uint256 amountA, uint256 amountB, uint256 liquidity) = _aeroRouter.quoteAddLiquidity(
+            weth,
+            usdbc,
+            false,
+            aeroFactory,
+            ethAmount,
+            usdbcAmount
+        );
+
+    _usdbc.approve(aeroRouter,usdbcAmount);
     //todo remaining placeholders here
-    _aeroPool.addLiquidityETH(usdbc,false,3,4,ethAmount,address(this),7);
+    _aeroRouter.addLiquidityETH(usdbc,false,liquidity,amountB,amountA,address(this),7);
     _vammWethUsdbc.approve(lptoken,max);
     
      //https://basescan.org/address/0xeca7ff920e7162334634c721133f3183b83b0323#code
@@ -189,7 +218,7 @@ contract manager {
     function getRewardsUnstakeRemoveLiquidity(uint256 usdbcAmount, int256 ethAmount) external onlyOwner{
     //get reward
     //unstake
-    //approve approve wethusdbc 
+    //approve approve wethusdbc to liquidity pool contract
     //remove liquidity
     //now I have weth and usdbc -> todo convert weth to usdbc on uniswap
     }

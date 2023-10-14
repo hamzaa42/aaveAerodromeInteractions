@@ -18,9 +18,10 @@ async function main() {
   const aavePool_Contract = '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5'
   const aaveWETHGateway_Contract = '0x18CD499E3d7ed42FEbA981ac9236A278E4Cdc2ee'
   const aaveVariableDebtToken_Contract = '0x24e6e0795b3c7c71D965fCc4f371803d1c1DcA1E'
-  const aerodromeWethUsdbcPool_Contract = '0xcf77a3ba9a5ca399b7c97c74d54e5b1beb874e43'
   const aerodromeStaker_Contract = '0xeca7ff920e7162334634c721133f3183b83b0323'
-
+  const aerodromeRouter_Contract = '0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43'
+  //for getting quotes
+  const aerodromePoolFactory_Contract = '0x420DD381b31aEf6683db6B902084cB0FFECe40Da'
   // Provide the ABI for your contract
   const contractAbi = require('../artifacts/contracts/manager.sol/manager.json')
 
@@ -28,9 +29,17 @@ async function main() {
   const managerFactory = new ethers.ContractFactory(contractAbi.abi, contractAbi.bytecode, wallet)
 
 
-//todo update with new addresses
-//namely weth aerodrome, Vamm
-//add also relevent functions of aerodrome in manager
+
+//   address usdbcAddress,
+//   address wethAddress,
+//   address vammWethUsdbcAddress,
+//   address aavePoolAddress,
+//   address aaveWethGatewayAddress,
+//   address variableDebtTokenAddress,
+//   address aeroStakerAddress,
+//   address aerodromeRouterAddress
+
+
   const manager = await managerFactory.deploy(
     usdbc_Contract,
     weth_contract,
@@ -38,8 +47,8 @@ async function main() {
     aavePool_Contract,
     aaveWETHGateway_Contract,
     aaveVariableDebtToken_Contract,
-    aerodromeWethUsdbcPool_Contract,
-    aerodromeStaker_Contract
+    aerodromeStaker_Contract,
+    aerodromeRouter_Contract
     )
 
 //  await manager.deployed();

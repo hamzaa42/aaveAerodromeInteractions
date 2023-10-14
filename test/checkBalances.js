@@ -3,6 +3,7 @@ const ethers = require('ethers');
 // Connect to an Ethereum provider (e.g., Infura)
 const provider = new ethers.getDefaultProvider('http://127.0.0.1:8545/')
 const testKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+const myWalletAddress = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
 
 // Specify the Ethereum address for which you want to check balances
 const usdcbAddress = '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA'; // Replace with ERC-20 token 1 contract address
@@ -10,20 +11,20 @@ const aaveBaseWethAddress = '0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7'; // Rep
 const myContractAddress= '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'
 const usdbcABI = require('./ABIs/usdbcABI.json'); // ERC-20 balanceOf function ABI for token 1
 
-const address = '0xc6e7DF5E7b4f2A278906862b61205850344D4e7d'; // Replace with the address you want to query
+const address = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'; // Replace with the address you want to query
 
 // Function to get ETH balance
-async function getEthBalance() {
-  const balance = await provider.getBalance(address);
+async function getEthBalance(target) {
+  const balance = await provider.getBalance(target);
   const ethBalance = ethers.formatEther(balance);
 
-  console.log(`ETH Balance for ${address}: ${ethBalance} ETH`);
+  console.log(`ETH Balance for ${target}: ${ethBalance} ETH`);
 }
 
 // Function to get ERC-20 token balance
-async function getTokenBalance(tokenaddr) {
+async function getTokenBalance(tokenaddr, target) {
 const tokenContract = new ethers.Contract(tokenaddr, usdbcABI, provider);
-const tokenBalance = await tokenContract.balanceOf(address);
+const tokenBalance = await tokenContract.balanceOf(target);
 
     
 //  console.log(`Token Balance for ${address}: ${tokenBalance.toString()} tokens ${ethers.formatEther(tokenBalance)}`);
@@ -34,6 +35,6 @@ const tokenBalance = await tokenContract.balanceOf(address);
 
 
 // Call the functions to get balances
-getTokenBalance(usdcbAddress);
-getTokenBalance('0x0a1d576f3eFeF75b330424287a95A366e8281D54');
-getEthBalance()
+getTokenBalance(usdcbAddress,myContractAddress);
+
+getEthBalance(myContractAddress)

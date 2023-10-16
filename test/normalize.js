@@ -47,7 +47,7 @@ async function lfg() {
     const usdbcSupplyAmount = (BigInt('666')*BigInt(10**6)).toString()
     
     //setting usdbc amount to LP to my contract
-    const usdbcLPAmount = (BigInt('334')*BigInt(10**6)).toString()
+    const usdbcLPAmount = (BigInt('333')*BigInt(10**6)).toString()
 
     //ether payload for borrowing
     const ethPayload = ethers.parseEther('0.215')
@@ -56,7 +56,10 @@ async function lfg() {
 
     
     console.log(
-            (await myContract.normalize(aerodromeFactory_Contract,
+            (await myContract.normalize(
+                aerodromeFactory_Contract,
+                usdbcSupplyAmount,
+                ethPayload,
                          
                     { gasPrice: gasPriceInWei, gasLimit: gasLimit })
                 )

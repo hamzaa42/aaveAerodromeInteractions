@@ -7,7 +7,7 @@ const myWalletAddress = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
 const vammWethUsdbc_Contract = '0xB4885Bc63399BF5518b994c1d0C153334Ee579D0'
 const aero_Contract = '0x7C48D6D053a8004eC634C0D7950b1dE2d6A2D7c4'
 const aaveBaseWethAddress = '0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7'; // Replace with ERC-20 token 1 contract address
-
+const aaveBaseVariableDebtEthContract = '0x24e6e0795b3c7c71D965fCc4f371803d1c1DcA1E'
 
 const weth_contract = '0x4200000000000000000000000000000000000006'
 const wethABI = require('./ABIs/wethABI.json'); // ERC-20 balanceOf function ABI for token 1
@@ -58,6 +58,12 @@ await getTokenBalance(vammWethUsdbc_Contract,myContractAddress);
 
 console.log('AERO in Contract')
 await getTokenBalance(aero_Contract,myContractAddress);
+
+console.log('dETH in Contract')
+await getTokenBalance(aaveBaseVariableDebtEthContract, myContractAddress);
+
+console.log('dUSDC in Contract')
+await getTokenBalance('0x0a1d576f3eFeF75b330424287a95A366e8281D54', myContractAddress);
 
 console.log('WETH in Contract')
 await getWETHBalance(myContractAddress);

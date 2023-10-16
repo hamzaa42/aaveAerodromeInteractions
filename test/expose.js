@@ -51,14 +51,22 @@ async function lfg() {
     const max = ethers.MaxUint256 // Maximum uint256 value
     const usdbcContract = await initUsdbcContract()
     
-    //initializing my contract with usdbc
-    await usdbcContract.transfer(my_contract,(BigInt('1000')*BigInt(10**6)).toString())
+    //sending some eth to cover nonrecoverable dust
+    //         const tx = await wallet.sendTransaction({
+    //             to: myContract,
+    //             value: ethers.parseEther('0.001')
+    //         })
+
+    // tx.wait()
     
+    //initializing my contract with usdbc
+         //  await usdbcContract.transfer(my_contract,(BigInt('1000')*BigInt(10**6)).toString())
+   
     //setting usdbc amount to borrow to my contract
     const usdbcSupplyAmount = (BigInt('666')*BigInt(10**6)).toString()
     
     //setting usdbc amount to LP to my contract
-    const usdbcLPAmount = (BigInt('334')*BigInt(10**6)).toString()
+    const usdbcLPAmount = (BigInt('333')*BigInt(10**6)).toString()
 
     //ether payload for borrowing
     const ethPayload = ethers.parseEther('0.215')

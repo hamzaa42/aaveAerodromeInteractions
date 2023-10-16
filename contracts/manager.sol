@@ -3,11 +3,23 @@ pragma solidity ^0.8.0;
 
 // Define an relevant ERC20 functions.
 interface IERC20 {
-    function approve(address spender, uint256 amount) external returns (bool);
+    function approve(address spender, uint amount) external returns (bool);
 
-    function transfer(address to, uint256 amount) external returns (bool);
+    function transfer(address to, uint amount) external returns (bool);
 
-    function balanceOf(address account) external view returns (uint256);
+    function balanceOf(address account) external view returns (uint);
+}
+
+interface IWETH {
+    function approve(address spender, uint amount) external returns (bool);
+
+    function transfer(address to, uint amount) external returns (bool);
+
+    function balanceOf(address account) external view returns (uint);
+
+    function withdraw(uint wad) external;
+ 
+
 }
 
 // Define an interface for interacting with aave shitcoin pool.
@@ -15,13 +27,13 @@ interface IAavePool {
     // Supply funds to the pool.
     function supply(
         address asset,
-        uint256 amount,
+        uint amount,
         address onBehalfOf,
         uint16 referralCode
     ) external;
 
     // Withdraw funds from the pool.
-    function withdraw(address asset, uint256 amount, address to) external;
+    function withdraw(address asset, uint amount, address to) external;
 
     // function setUserUseReserveAsCollateral(
     //     address asset,
@@ -33,22 +45,22 @@ interface IAaveWethGateway {
     // Borrow ETH from the pool.
     function borrowETH(
         address pool,
-        uint256 amount,
-        uint256 interestRateMode,
+        uint amount,
+        uint interestRateMode,
         uint16 referralCode
     ) external;
 
     // Repay borrowed ETH to the pool.
     function repayETH(
         address pool,
-        uint256 amount,
-        uint256 rateMode,
+        uint amount,
+        uint rateMode,
         address onBehalfOf
     ) external payable;
 }
 
 interface IVariableDebtToken {
-    function approveDelegation(address delegatee, uint256 amount) external;
+    function approveDelegation(address delegatee, uint amount) external;
 }
 
 // Define an interface for the Aero Router.
@@ -56,25 +68,25 @@ interface IAeroRouter {
     function addLiquidityETH(
         address token,
         bool stable,
-        uint256 amountTokenDesired,
-        uint256 amountTokenMin,
-        uint256 amountETHMin,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
         address to,
-        uint256 deadline
+        uint deadline
     )
         external
         payable
-        returns (uint256 amountToken, uint256 amountETH, uint256 liquidity);
+        returns (uint amountToken, uint amountETH, uint liquidity);
 
     function removeLiquidity(
         address tokenA,
         address tokenB,
         bool stable,
-        uint256 liquidity,
-        uint256 amountAMin,
-        uint256 amountBMin,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
         address to,
-        uint256 deadline
+        uint deadline
     ) external payable;
 
     function quoteAddLiquidity(
@@ -82,39 +94,39 @@ interface IAeroRouter {
         address tokenB,
         bool stable,
         address _factory,
-        uint256 amountADesired,
-        uint256 amountBDesired
+        uint amountADesired,
+        uint amountBDesired
     )
         external
         view
-        returns (uint256 amountA, uint256 amountB, uint256 liquidity);
+        returns (uint amountA, uint amountB, uint liquidity);
 
     function quoteRemoveLiquidity(
         address tokenA,
         address tokenB,
         bool stable,
         address _factory,
-        uint256 liquidity
-    ) external view returns (uint256 amountA, uint256 amountB);
+        uint liquidity
+    ) external view returns (uint amountA, uint amountB);
 }
 
 interface IAeroStaker {
-    function deposit(uint256 amount) external;
+    function deposit(uint amount) external;
 
     //https://basescan.org/tx/0x257273bb0ab9c0fc8fba6a68fed662c91e572901507389a577c30d08d64bc679
     function getReward(address user) external;
 
     //https://basescan.org/tx/0x46439616cf4cdd117a54142f0c77ca532de80d6c2b380c92d64afbcbffad19e6
-    function withdraw(uint256 _amount) external;
+    function withdraw(uint _amount) external;
 
-    function balanceOf(address user) external returns (uint256);
+    function balanceOf(address user) external returns (uint);
 }
 
 //Defining Smart contract
 contract manager {
     //creating contract's API
     IERC20 private USDBC;
-    IERC20 private WETH;
+    IWETH private WETH;
     IERC20 private VAMM;
     IAavePool private AAVE_POOL;
     IAaveWethGateway private AAVE_WETH_GATEWAY;
@@ -134,7 +146,7 @@ contract manager {
         address aerodromeRouterAddress
     ) {
         USDBC = IERC20(usdbcAddress);
-        WETH = IERC20(wethAddress);
+        WETH = IWETH(wethAddress);
         VAMM = IERC20(vammWethUsdbcAddress);
         AAVE_POOL = IAavePool(aavePoolAddress);
         AAVE_WETH_GATEWAY = IAaveWethGateway(aaveWethGatewayAddress);
@@ -164,11 +176,11 @@ contract manager {
      stake lp tokens
      */
     function expose(
-        uint256 _usdbcSupplyAmount,
-        uint256 _delegationAmt,
-        uint256 _ethAmount,
+        uint _usdbcSupplyAmount,
+        uint _delegationAmt,
+        uint _ethAmount,
         address _aeroFactory,
-        uint256 _usdbcLPAmount
+        uint _usdbcLPAmount
     ) external payable onlyOwner {
         //approving usdbc to be used in the pool
         USDBC.approve(address(AAVE_POOL), _usdbcSupplyAmount);
@@ -187,10 +199,10 @@ contract manager {
         AAVE_WETH_GATEWAY.borrowETH(address(AAVE_POOL), _ethAmount, 2, 0);
 
         //initializing variables to get quotes
-        uint256 amountA;
-        uint256 amountB;
-        uint256 liquidity;
-        uint256 deadline;
+        uint amountA;
+        uint amountB;
+        uint liquidity;
+        uint deadline;
 
         //getting quote for providing liquidity to aerodrome
         (amountA, amountB, liquidity) = AERO_ROUTER.quoteAddLiquidity(
@@ -231,17 +243,18 @@ remove liquidity
 repay eth
 withdraw usdbc
  */
-    function normalize(address aeroFactory) external payable onlyOwner {
+    function normalize(address aeroFactory, uint usdbcAmountAave, uint ethDebt) external payable onlyOwner {
 
-        uint256 stakedAmount = AERO_STAKER.balanceOf(address(this));
+        uint stakedAmount = AERO_STAKER.balanceOf(address(this));
+        //uint aaveWETHDebt = DEBT_TOKEN.balanceOf(address(this));
         
         AERO_STAKER.withdraw(stakedAmount);
         
-        uint256 vammBalance;
-        uint256 deadline;
-        uint256 wethAmount;
-        uint256 usdbcAmount;
-        deadline = block.timestamp + 1;
+        uint vammBalance;
+        uint wethAmount;
+        uint usdbcAmount;
+        
+        uint deadline = block.timestamp + 1;
         
         vammBalance = VAMM.balanceOf(address(this));
         VAMM.approve(address(AERO_ROUTER), vammBalance);
@@ -264,6 +277,10 @@ withdraw usdbc
             address(this),
             deadline
         );
+
+        WETH.withdraw(wethAmount);
+        AAVE_WETH_GATEWAY.repayETH{value:ethDebt}(address(AAVE_POOL),ethDebt,2,address(this));
+        AAVE_POOL.withdraw(address(USDBC),usdbcAmountAave,address(this));
     }
 
     function getStakingRewards() external onlyOwner {
@@ -277,7 +294,7 @@ withdraw usdbc
 
     function withdrawERC20(
         address tokenAddress,
-        uint256 amount
+        uint amount
     ) external onlyOwner {
         IERC20 token = IERC20(tokenAddress);
         token.transfer(msg.sender, amount);

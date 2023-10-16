@@ -66,6 +66,17 @@ interface IAeroRouter {
         payable
         returns (uint256 amountToken, uint256 amountETH, uint256 liquidity);
 
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        bool stable,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    ) external payable;
+
     function quoteAddLiquidity(
         address tokenA,
         address tokenB,
@@ -77,10 +88,26 @@ interface IAeroRouter {
         external
         view
         returns (uint256 amountA, uint256 amountB, uint256 liquidity);
+
+    function quoteRemoveLiquidity(
+        address tokenA,
+        address tokenB,
+        bool stable,
+        address _factory,
+        uint256 liquidity
+    ) external view returns (uint256 amountA, uint256 amountB);
 }
 
 interface IAeroStaker {
     function deposit(uint256 amount) external;
+
+    //https://basescan.org/tx/0x257273bb0ab9c0fc8fba6a68fed662c91e572901507389a577c30d08d64bc679
+    function getReward(address user) external;
+
+    //https://basescan.org/tx/0x46439616cf4cdd117a54142f0c77ca532de80d6c2b380c92d64afbcbffad19e6
+    function withdraw(uint256 _amount) external;
+
+    function balanceOf(address user) external returns (uint256);
 }
 
 //Defining Smart contract
@@ -130,22 +157,28 @@ contract manager {
 
     receive() external payable {}
 
-    function supplyBorrowAddlpStake(
+    /**
+     supply usdbc
+     borrow eth
+     lp with usdbc and eth
+     stake lp tokens
+     */
+    function expose(
         uint256 _usdbcSupplyAmount,
         uint256 _delegationAmt,
         uint256 _ethAmount,
         address _aeroFactory,
         uint256 _usdbcLPAmount
-
     ) external payable onlyOwner {
-
         //approving usdbc to be used in the pool
         USDBC.approve(address(AAVE_POOL), _usdbcSupplyAmount);
         //approving debt tokens to be delegated
-        DEBT_TOKEN.approveDelegation(address(AAVE_WETH_GATEWAY),_delegationAmt);
+        DEBT_TOKEN.approveDelegation(
+            address(AAVE_WETH_GATEWAY),
+            _delegationAmt
+        );
         //approving usdbc amount to aero router
         USDBC.approve(address(AERO_ROUTER), _usdbcLPAmount);
-
 
         //supplying usdbc
         AAVE_POOL.supply(address(USDBC), _usdbcSupplyAmount, address(this), 0);
@@ -172,7 +205,6 @@ contract manager {
         //defining deadline for liquidity tx, 1s indicating within the same block
         deadline = block.timestamp + 1;
 
-
         //adding the LP for LP tokens and saving return
         (amountA, amountB, liquidity) = AERO_ROUTER.addLiquidityETH{
             value: amountA
@@ -193,11 +225,54 @@ contract manager {
         AERO_STAKER.deposit(liquidity);
     }
 
-    function getRewards() external onlyOwner {
-        //placeholder to withdraw staking rewards and LPing rewards
-        //get staking rewards in smart contract
-        //dump for usdbc
-        //send rewards to owner
+    /**
+unstake
+remove liquidity
+repay eth
+withdraw usdbc
+ */
+    function normalize(address aeroFactory) external payable onlyOwner {
+
+        uint256 stakedAmount = AERO_STAKER.balanceOf(address(this));
+        
+        AERO_STAKER.withdraw(stakedAmount);
+        
+        uint256 vammBalance;
+        uint256 deadline;
+        uint256 wethAmount;
+        uint256 usdbcAmount;
+        deadline = block.timestamp + 1;
+        
+        vammBalance = VAMM.balanceOf(address(this));
+        VAMM.approve(address(AERO_ROUTER), vammBalance);
+        
+        (wethAmount,usdbcAmount) = AERO_ROUTER.quoteRemoveLiquidity(
+            address(WETH),
+            address(USDBC),
+            false,
+            aeroFactory,
+            vammBalance
+        );
+
+        AERO_ROUTER.removeLiquidity(
+            address(WETH),
+            address(USDBC),
+            false,
+            vammBalance,
+            wethAmount,
+            usdbcAmount,
+            address(this),
+            deadline
+        );
+    }
+
+    function getStakingRewards() external onlyOwner {
+        AERO_STAKER.getReward(address(this));
+        
+    }
+
+    function getLPRewards() external onlyOwner {
+        // get lp rewards
     }
 
     function withdrawERC20(

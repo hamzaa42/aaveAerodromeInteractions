@@ -11,7 +11,7 @@ const my_contract = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'
 //related to borrowing usdc
 const aavePool = '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5'
 const USDbC = '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA'
-const usdbcABI = require('./ABIs/usdbcABI.json')
+const usdbcABI = require('../ABIs/usdbcABI.json')
 const aaveUSDbC = '0x0a1d576f3eFeF75b330424287a95A366e8281D54'
 
 //related to depositing eth
@@ -24,7 +24,7 @@ const wallet = new ethers.Wallet(testKey, provider);
 
 async function initMyContract() {
 
-    const contractABI = require('../artifacts/contracts/manager.sol/manager.json')
+    const contractABI = require('../../artifacts/contracts/manager.sol/manager.json')
 
     const contract = new ethers.Contract(my_contract, contractABI.abi, wallet)
 
@@ -33,7 +33,7 @@ async function initMyContract() {
 }
 async function initUsdbcContract() {
 
-    const contractABI = require('../artifacts/contracts/manager.sol/manager.json')
+    const contractABI = require('../../artifacts/contracts/manager.sol/manager.json')
 
     const contract = new ethers.Contract(USDbC, usdbcABI, wallet)
 
@@ -55,23 +55,26 @@ async function lfg() {
     
 
     //initializing my contract with usdbc
-    await usdbcContract.transfer(my_contract,(BigInt('1000')*BigInt(10**6)).toString())
+    //await usdbcContract.transfer(my_contract,(BigInt('10000')*BigInt(10**6)).toString())
     
     //setting usdbc amount to borrow to my contract
-    const usdbcAmount = (BigInt('666')*BigInt(10**6)).toString()
+    const usdbcAmount = (BigInt('1000')*BigInt(10**6)).toString()
     //ether payload for borrowing
-    const ethPayload = ethers.parseEther('0.215')
+    const ethPayload = ethers.parseEther('0.01')
    
     
 
     
     console.log(
-            (await myContract.supplyBorrow(
+            await myContract.supplyBorrow(
                     usdbcAmount,
+                    USDbC,
+                    aavePool,
+                    aaveWethGateway_,
                     max,
                     ethPayload,           
-                    { gasPrice: gasPriceInWei, gasLimit: gasLimit })
-                ).data
+                    { gasPrice: gasPriceInWei, gasLimit: gasLimit }
+                )
     )
     
     
@@ -81,5 +84,19 @@ async function lfg() {
 
 
 lfg()
+// console.log(
+//     await myContract.supplyUSDbC (
+//         usdbcAmount,USDbC,aavePool,
+//         { gasPrice: gasPriceInWei, gasLimit: gasLimit }
 
+//     )
+// )
+
+// console.log(
+    //     await myContract.supplyUSDbCApproveDelegation (
+        //         usdbcAmount,USDbC,aavePool,aaveWethGateway_,max,
+        //         { gasPrice: gasPriceInWei, gasLimit: gasLimit }
+        
+        //     )
+        // )
         

@@ -9,14 +9,13 @@ const my_contract = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'
 
 
 //related to borrowing usdc
+const aavePool = '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5'
 const USDbC = '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA'
-const usdbcABI = require('./ABIs/usdbcABI.json')
-const aerodromeFactory_Contract = '0x420DD381b31aEf6683db6B902084cB0FFECe40Da'
+const usdbcABI = require('../ABIs/usdbcABI.json')
+const aaveUSDbC = '0x0a1d576f3eFeF75b330424287a95A366e8281D54'
 
 //related to depositing eth
-// const aavePool = '0xA238Dd80C259a72e81d7e4664a9801593F98d1c5'
-// const aaveUSDbC = '0x0a1d576f3eFeF75b330424287a95A366e8281D54'
-// const aaveWethGateway_ = '0x18CD499E3d7ed42FEbA981ac9236A278E4Cdc2ee'
+const aaveWethGateway_ = '0x18CD499E3d7ed42FEbA981ac9236A278E4Cdc2ee'
 
 
 const wallet = new ethers.Wallet(testKey, provider);
@@ -25,7 +24,7 @@ const wallet = new ethers.Wallet(testKey, provider);
 
 async function initMyContract() {
 
-    const contractABI = require('../artifacts/contracts/manager.sol/manager.json')
+    const contractABI = require('../../artifacts/contracts/manager.sol/manager.json')
 
     const contract = new ethers.Contract(my_contract, contractABI.abi, wallet)
 
@@ -34,7 +33,7 @@ async function initMyContract() {
 }
 async function initUsdbcContract() {
 
-    const contractABI = require('../artifacts/contracts/manager.sol/manager.json')
+    const contractABI = require('../../artifacts/contracts/manager.sol/manager.json')
 
     const contract = new ethers.Contract(USDbC, usdbcABI, wallet)
 
@@ -51,15 +50,15 @@ async function lfg() {
     const max = ethers.MaxUint256 // Maximum uint256 value
     const usdbcContract = await initUsdbcContract()
     
+    
+    //swapping eth for usdbc on uniswap
+    
+
     //initializing my contract with usdbc
     await usdbcContract.transfer(my_contract,(BigInt('1000')*BigInt(10**6)).toString())
     
     //setting usdbc amount to borrow to my contract
-    const usdbcSupplyAmount = (BigInt('666')*BigInt(10**6)).toString()
-    
-    //setting usdbc amount to LP to my contract
-    const usdbcLPAmount = (BigInt('334')*BigInt(10**6)).toString()
-
+    const usdbcAmount = (BigInt('666')*BigInt(10**6)).toString()
     //ether payload for borrowing
     const ethPayload = ethers.parseEther('0.215')
    
@@ -67,12 +66,10 @@ async function lfg() {
 
     
     console.log(
-            (await myContract.supplyBorrowAddlpStake(
-                usdbcSupplyAmount,
+            (await myContract.supplyBorrow(
+                    usdbcAmount,
                     max,
-                    ethPayload,
-                    aerodromeFactory_Contract,
-                    usdbcLPAmount,           
+                    ethPayload,           
                     { gasPrice: gasPriceInWei, gasLimit: gasLimit })
                 ).data
     )
